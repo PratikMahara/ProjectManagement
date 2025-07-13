@@ -29,7 +29,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await axios.get('/api/projects');
+        const res = await axios.get('http://localhost:5000/api/projects/getproject');
         const fetchedProjects: Project[] = res.data.data.map((p: any) => ({
           id: p._id,
           projectName: p.projectName,

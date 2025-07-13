@@ -32,4 +32,12 @@ if (
     .json(new ApiResponse(200, project, "project created successfully"));
 });
 
-export default saveProject;
+ const getAllProjects = async (req,res) => {
+  try {
+    const projects = await Project.find();
+    res.status(200).json({ success: true, data: projects });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server Error', error: err });
+  }
+};
+export {saveProject,getAllProjects};

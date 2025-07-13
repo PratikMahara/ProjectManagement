@@ -30,7 +30,7 @@ const ProjectSelector: React.FC = () => {
 
   const fetchProjects = async () => {
     try {
-      const res = await fetch('/api/projects');
+      const res = await fetch('http://localhost:5000/api/projects/getproject');
       const json = await res.json();
       setProjects(json.data || []);
     } catch (err) {

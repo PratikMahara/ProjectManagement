@@ -75,6 +75,8 @@ const loginUser = asyncHandler(async (req, res) => {
   const userResponse = {
     _id: user._id,
     username: user.username,
+    accessToken,
+    refreshToken
    
   };
 
