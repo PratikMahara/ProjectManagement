@@ -1,18 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Plus, FolderOpen, Calendar, MapPin, DollarSign } from 'lucide-react';
-
-interface Project {
-  _id: string;
-  projectName: string;
-  location: string;
-  startDate: string;
-  expectedEndDate: string;
-  estimatedCost: number;
-}
+import { useProject } from '../contexts/ProjectContext';
 
 const ProjectSelector: React.FC = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const {
+    projects,
+    currentProject,
+    selectProject,
+    createProject
+  } = useProject();
+
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     projectName: '',
@@ -23,52 +20,29 @@ const ProjectSelector: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Fetch projects on mount
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/projects/getproject');
-      const json = await res.json();
-      setProjects(json.data || []);
-    } catch (err) {
-      console.error('Error fetching projects', err);
-    }
-  };
-
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/projects/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          estimatedCost: Number(formData.estimatedCost)
-        })
+      await createProject({
+        projectName: formData.projectName,
+        location: formData.location,
+        startDate: formData.startDate,
+        expectedEndDate: formData.expectedEndDate,
+        estimatedCost: Number(formData.estimatedCost)
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        setProjects((prev) => [data.data, ...prev]);
-        setCurrentProject(data.data);
-        setShowCreateForm(false);
-        setFormData({
-          projectName: '',
-          location: '',
-          startDate: '',
-          expectedEndDate: '',
-          estimatedCost: ''
-        });
-      } else {
-        alert(data.message || 'Failed to create project');
-      }
+      setShowCreateForm(false);
+      setFormData({
+        projectName: '',
+        location: '',
+        startDate: '',
+        expectedEndDate: '',
+        estimatedCost: ''
+      });
     } catch (err) {
-      console.log("finding error:",err);
-      alert('Server error');
+      console.error('Failed to create project:', err);
+      alert('Failed to create project');
     }
     setLoading(false);
   };
@@ -178,13 +152,13 @@ const ProjectSelector: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {projects.map((project) => (
           <div
-            key={project._id}
+            key={project.id}
             className={`border rounded-lg p-4 cursor-pointer transition-all ${
-              currentProject?._id === project._id
+              currentProject?.id === project.id
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
             }`}
-            onClick={() => setCurrentProject(project)}
+            onClick={() => selectProject(project.id)} // ✅ use context
           >
             <h4 className="font-semibold text-gray-900 mb-2">{project.projectName}</h4>
             <p className="text-sm text-gray-600 mb-1 flex items-center gap-1">

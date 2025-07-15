@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Material } from '../types';
 
 const MaterialsTable: React.FC = () => {
+  
   const { currentProject, materials, addMaterial, updateMaterial, deleteMaterial } = useProject();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
@@ -26,8 +27,12 @@ const MaterialsTable: React.FC = () => {
       </div>
     );
   }
+console.log("Current Project ID:", currentProject.id);
+console.log("All Materials:", materials.map(m => m.projectId));
 
-  const projectMaterials = materials.filter(m => m.projectId === currentProject.id);
+const projectMaterials = materials.filter(m => m.projectId === currentProject.id);
+
+console.log("All Materials:", materials.map(m => m.projectId));
 
   const resetForm = () => {
     setFormData({
@@ -44,19 +49,27 @@ const MaterialsTable: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+    const actualStock = Number(formData.actualStock) || 0;
+    const usedStock = Number(formData.usedStock) || 0;
+    const costPerUnit = Number(formData.costPerUnit) || 0;
+console.log(typeof actualStock, typeof usedStock, typeof costPerUnit)
     if (editingMaterial) {
-      updateMaterial(editingMaterial.id, formData);
+      updateMaterial(editingMaterial.id, {
+        ...formData,
+        actualStock,
+        usedStock,
+        costPerUnit,
+      });
     } else {
       addMaterial({
         ...formData,
-       actualStock: Number(formData.actualStock) || 0,
-       usedStock: Number(formData.usedStock) || 0,
-       costPerUnit: Number(formData.costPerUnit) || 0,
-        projectId: currentProject.id
+        actualStock,
+        usedStock,
+        costPerUnit,
+        projectId: currentProject.id,
       });
     }
-    
+
     resetForm();
     setShowAddForm(false);
   };

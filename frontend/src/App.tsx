@@ -9,8 +9,16 @@ import MaterialsTable from './components/MaterialsTable';
 import StaffTable from './components/StaffTable';
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('projects');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <span>Loading...</span>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Login />;
@@ -41,7 +49,7 @@ const AppContent: React.FC = () => {
   );
 };
 
-function App() {
+const App: React.FC = () => {
   return (
     <AuthProvider>
       <ProjectProvider>
@@ -49,6 +57,6 @@ function App() {
       </ProjectProvider>
     </AuthProvider>
   );
-}
+};
 
 export default App;

@@ -84,5 +84,15 @@ const loginUser = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, userResponse, "Login successful"));
 });
+const getUser=asyncHandler(async(req,res)=>{
+  const user=req.user;
+  if(!user){
+    throw new ApiError(400," user not found");
+  }
+  // console.log(user);
 
-export { register, loginUser };
+  res.
+  status(200)
+  .json(new ApiResponse(200,user,"user found"));
+})
+export { register, loginUser, getUser };

@@ -12,6 +12,8 @@ app.use(express.urlencoded({extended:true, limit:"20kb"}))
 app.use(cookieParser())
 import userRouter from './routes/user.routes.js'
 import projectRouter from './routes/project.routes.js'
+import materialRouter from './routes/material.router.js'
 app.use('/api/user',userRouter)
 app.use('/api/projects',projectRouter);
+app.use('/api/material',materialRouter);
 export default app;
