@@ -13,7 +13,9 @@ app.use(cookieParser())
 import userRouter from './routes/user.routes.js'
 import projectRouter from './routes/project.routes.js'
 import materialRouter from './routes/material.router.js'
+import staffRouter from  './routes/staff.routes.js'
 app.use('/api/user',userRouter)
 app.use('/api/projects',projectRouter);
 app.use('/api/material',materialRouter);
+app.use('/api/staff',staffRouter);
 export default app;

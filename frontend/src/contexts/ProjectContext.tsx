@@ -25,7 +25,7 @@ interface ProjectContextType {
   ) => void;
   updateMaterial: (id: string, updates: Partial<Material>) => void;
   deleteMaterial: (id: string) => void;
-fetchAllMaterials: () => Promise<void>;
+  fetchAllMaterials: () => Promise<void>;
 
   addStaff: (staff: Omit<Staff, "id">) => void;
   updateStaff: (id: string, updates: Partial<Staff>) => void;
@@ -42,14 +42,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   const [materials, setMaterials] = useState<Material[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
 
-  // 📦 Fetch all projects on mount
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const res = await axios.get(
           "http://localhost:5000/api/projects/getproject"
         );
-        // console.log(res.data.data)
         const fetched: Project[] = res.data.data.map((p: any) => ({
           id: p._id,
           projectName: p.projectName,
@@ -59,12 +57,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
           estimatedCost: p.estimatedCost,
           createdAt: p.createdAt,
         }));
-        
+
         setProjects(fetched);
 
-
         if (fetched.length > 0) {
-          // console.log("Auto-selecting first project:", fetched[0]);
           setCurrentProject(fetched[0]);
         }
       } catch (err) {
@@ -74,13 +70,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
 
     fetchProjects();
   }, []);
-useEffect(() => {
-  if (currentProject) {
-    fetchAllMaterials();
-  }
-}, [currentProject]);
 
-  // 📦 Create new project
+  useEffect(() => {
+    if (currentProject) {
+      fetchAllMaterials();
+    }
+  }, [currentProject]);
+useEffect(() => {
+  fetchAllStaff();
+}, []);
   const createProject = async (
     projectData: Omit<Project, "id" | "createdAt">
   ) => {
@@ -101,8 +99,6 @@ useEffect(() => {
         createdAt: created.createdAt,
       };
 
-      // console.log("New Project created & set as current:", newProject);
-
       setProjects((prev) => [newProject, ...prev]);
       setCurrentProject(newProject);
     } catch (err) {
@@ -111,18 +107,15 @@ useEffect(() => {
     }
   };
 
-  // 📦 Select existing project
   const selectProject = (projectId: string) => {
     const found = projects.find((p) => p.id === projectId);
     if (found) {
-      // console.log("Selected existing project:", found);
       setCurrentProject(found);
     } else {
       console.warn(`Project with id ${projectId} not found`);
     }
   };
 
-  // 📦 Stock status helper
   const calculateStockStatus = (
     available: number,
     total: number
@@ -132,118 +125,194 @@ useEffect(() => {
     if (pct <= 50) return "warning";
     return "good";
   };
-const fetchAllMaterials = async () => {
-  try {
-    const res = await axios.get("http://localhost:5000/api/material/getmat");
-    if(!res.data || !res.data.data) {
-      console.error("Invalid response structure:", res.data);
-      return;
+
+  const fetchAllMaterials = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/material/getmat");
+      if (!res.data || !res.data.data) {
+        console.error("Invalid response structure:", res.data);
+        return;
+      }
+      const data = res.data.data;
+      const fetchedMaterials: Material[] = data.map((m: any) => {
+        const availableStock = m.actualStock - m.usedStock;
+        const totalCost = m.actualStock * m.costPerUnit;
+        const stockStatus = calculateStockStatus(availableStock, m.actualStock);
+
+        return {
+          id: m._id,
+          serialNumber: m.serialNumber,
+          materialName: m.materialName,
+          siteName: m.siteName,
+          actualStock: m.actualStock,
+          usedStock: m.usedStock,
+          costPerUnit: m.costPerUnit,
+          buyDate: m.buyDate,
+          availableStock,
+          totalCost,
+          stockStatus,
+         projectId: typeof m.projectId === 'object' ? m.projectId._id : m.projectId
+
+        };
+      });
+
+      setMaterials(fetchedMaterials);
+    } catch (err) {
+      console.error("Failed to fetch materials:", err);
     }
-    const data = res.data.data;
-console.log(data);
-    const fetchedMaterials: Material[] = data.map((m: any) => {
-      const availableStock = m.actualStock - m.usedStock;
-      const totalCost = m.actualStock * m.costPerUnit;
-      const stockStatus = calculateStockStatus(availableStock, m.actualStock);
-
-       return {
-    id: m._id,
-    serialNumber: m.serialNumber,
-    materialName: m.materialName,
-    siteName: m.siteName,
-    actualStock: m.actualStock,
-    usedStock: m.usedStock,
-    costPerUnit: m.costPerUnit,
-    buyDate: m.buyDate,
-    availableStock,
-    totalCost,
-    stockStatus,
-    projectId: typeof m.projectId === 'object' ? m.projectId.id : m.projectId // ✅ fix here
   };
-    });
 
-    setMaterials(fetchedMaterials);
-  } catch (err) {
-    console.error("Failed to fetch materials:", err);
-  }
-};
-
-  // 📦 Add Material
   const addMaterial = async (
-  materialData: Omit<Material, "id" | "availableStock" | "totalCost" | "stockStatus">
-) => {
-  try {
-    
-    const response = await axios.post(
-      "http://localhost:5000/api/material/savemat",
-      materialData
-    );
-    const saved = response.data.data;
+    materialData: Omit<Material, "id" | "availableStock" | "totalCost" | "stockStatus">
+  ) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/material/savemat",
+        materialData
+      );
+      const saved = response.data.data;
 
-   console.log(saved)
-    const availableStock = saved.actualStock - saved.usedStock;
-    const totalCost = saved.actualStock * saved.costUnit; 
-    const stockStatus = calculateStockStatus(availableStock, saved.actualStock);
+      const availableStock = saved.actualStock - saved.usedStock;
+      const totalCost = saved.actualStock * saved.costPerUnit;
+      const stockStatus = calculateStockStatus(availableStock, saved.actualStock);
 
-    
-    const newMaterial: Material = {
-      ...saved,
-      id: saved._id, 
-      availableStock,
-      totalCost,
-      stockStatus,
-    };
+      const newMaterial: Material = {
+        ...saved,
+        id: saved._id,
+        projectId: materialData.projectId, // ✅ explicitly set projectId
+        availableStock,
+        totalCost,
+        stockStatus,
+      };
 
-    setMaterials((prev) => [...prev, newMaterial]);
-  } catch (error) {
-    console.error("Failed to add material:", error);
-    throw error;
-  }
-};
+      setMaterials((prev) => [...prev, newMaterial]);
+    } catch (error) {
+      console.error("Failed to add material:", error);
+      throw error;
+    }
+  };
 
   const updateMaterial = (id: string, updates: Partial<Material>) => {
-    setMaterials((prev) =>
-      prev.map((material) => {
-        if (material.id === id) {
-          const updated = { ...material, ...updates };
-          updated.availableStock =
-            updated.actualStock - updated.usedStock;
-          updated.totalCost =
-            updated.actualStock * updated.costPerUnit;
-          updated.stockStatus = calculateStockStatus(
-            updated.availableStock,
-            updated.actualStock
-          );
-          return updated;
-        }
-        return material;
-      })
-    );
-  };
+  axios
+    .put(`http://localhost:5000/api/material/updatemat/${id}`, updates)
+    .then((response) => {
+      const updatedMaterial = response.data.material;
+
+      // Now update the local state using the updated data
+      setMaterials((prev) =>
+        prev.map((material) => {
+          if (material.id === id) {
+            const updated = {
+              ...material,
+              ...updatedMaterial,
+            };
+            return updated;
+          }
+          return material;
+        })
+      );
+    })
+    .catch((error) => {
+      console.error("Failed to update material:", error);
+    });
+};
+
 
   const deleteMaterial = (id: string) => {
+    axios
+      .delete(`http://localhost:5000/api/material/delmat/${id}`)
+      .then(() => {
+        console.log("Material deleted successfully");
+      })
+      .catch((error) => {
+        console.error("Failed to delete material:", error);
+      });
     setMaterials((prev) => prev.filter((m) => m.id !== id));
   };
 
-  const addStaff = (staffData: Omit<Staff, "id">) => {
-    const newStaff: Staff = {
-      ...staffData,
-      id: Date.now().toString(),
-    };
-    setStaff((prev) => [...prev, newStaff]);
-  };
+const addStaff = async (staffData: Omit<Staff, "id">) => {
+  try {
+    const res = await axios.post("http://localhost:5000/api/staff/addstaff", staffData);
+    const saved = res.data.data;
 
-  const updateStaff = (id: string, updates: Partial<Staff>) => {
+    const newStaff: Staff = {
+      id: saved._id,
+      projectId: saved.projectId,
+      serialNumber: saved.serialNumber,
+      role: saved.role,
+      name: saved.fullName, // Ensure frontend uses `name` mapped from `fullName`
+      salary: saved.salary,
+      workProgress: saved.workProgress,
+      startDate: saved.startDate,
+      status: saved.status,
+    };
+
+    setStaff((prev) => [...prev, newStaff]);
+  } catch (err) {
+    console.error("Failed to add staff:", err);
+    throw err;
+  }
+};
+const fetchAllStaff = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/api/staff/getstaff");
+    if (!res.data || !res.data.data) {
+      console.error("Invalid response structure:", res.data);
+      return;
+    }
+
+    const data = res.data.data;
+
+    const fetchedStaff: Staff[] = data.map((s: any) => ({
+      id: s._id,
+      serialNumber: s.serialNumber,
+      role: s.role,
+      name: s.fullName || s.name, // in case backend sends fullName
+      salary: s.salary,
+      workProgress: s.workProgress,
+      startDate: s.startDate,
+      status: s.status,
+      projectId: typeof s.projectId === 'object' ? s.projectId._id : s.projectId,
+    }));
+
+    setStaff(fetchedStaff);
+  } catch (err) {
+    console.error("Failed to fetch staff:", err);
+  }
+};
+
+ const updateStaff = async (id: string, updates: Partial<Staff>) => {
+  try {
+    // call backend API
+    await axios.put(`http://localhost:5000/api/staff/updatestaff/${id}`, updates);
+
+    // update state
     setStaff((prev) =>
       prev.map((member) =>
         member.id === id ? { ...member, ...updates } : member
       )
     );
-  };
+  } catch (err) {
+    console.error("Failed to update staff:", err);
+    alert("Failed to update staff. Please try again.");
+  }
+};
 
-  const deleteStaff = (id: string) => {
+
+const deleteStaff = async (id: string) => {
+  if (!window.confirm("Are you sure you want to delete this staff member?")) {
+    return;
+  }
+
+  try {
+    await axios.delete(`http://localhost:5000/api/staff/deletestaff/${id}`);
     setStaff((prev) => prev.filter((member) => member.id !== id));
-  };
+  } catch (err) {
+    console.error("Failed to delete staff:", err);
+    alert("Failed to delete staff. Please try again.");
+  }
+};
+
 
   return (
     <ProjectContext.Provider
@@ -252,7 +321,6 @@ console.log(data);
         currentProject,
         materials,
         staff,
-
         createProject,
         selectProject,
         addMaterial,

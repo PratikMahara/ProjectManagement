@@ -1,6 +1,11 @@
 import {mongoose,Schema} from 'mongoose';
 
 const materialSchema=new Schema({
+    projectId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Project",
+        required:true
+    },
 serialNumber:{
     type:String,
     required:true,

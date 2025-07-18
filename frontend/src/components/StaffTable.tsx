@@ -7,6 +7,7 @@ const StaffTable: React.FC = () => {
   const { currentProject, staff, addStaff, updateStaff, deleteStaff } = useProject();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     serialNumber: '',
     role: '',
@@ -42,22 +43,32 @@ const StaffTable: React.FC = () => {
     setEditingStaff(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (editingStaff) {
-      updateStaff(editingStaff.id, formData);
-    } else {
-      addStaff({
-        ...formData,
-       salary: Number(formData.salary) || 0,
-       workProgress: Number(formData.workProgress) || 0,
-        projectId: currentProject.id
-      });
+setLoading(true);
+    const { name, ...rest } = formData;
+   const payload = {
+  ...rest,
+  fullName: name,
+  name, // Add this to satisfy TypeScript, but backend will ignore it
+  salary: Number(formData.salary) || 0,
+  workProgress: Number(formData.workProgress) || 0,
+  projectId: currentProject.id,
+};
+
+
+    try {
+      if (editingStaff) {
+        updateStaff(editingStaff.id, payload);
+      } else {
+        await addStaff(payload);
+      }
+      resetForm();
+      setShowAddForm(false);
+    } catch (error) {
+      alert("Failed to save staff. Please try again.");
+      console.error("Error saving staff:", error);
     }
-    
-    resetForm();
-    setShowAddForm(false);
   };
 
   const handleEdit = (staffMember: Staff) => {
@@ -175,10 +186,8 @@ const StaffTable: React.FC = () => {
                   type="number"
                   value={formData.salary}
                   onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="0"
-                  step="1"
-                  placeholder="0"
                   required
                 />
               </div>
@@ -190,10 +199,9 @@ const StaffTable: React.FC = () => {
                   type="number"
                   value={formData.workProgress}
                   onChange={(e) => setFormData({ ...formData, workProgress: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="0"
                   max="100"
-                  placeholder="0"
                   required
                 />
               </div>
@@ -223,12 +231,15 @@ const StaffTable: React.FC = () => {
                 </select>
               </div>
               <div className="md:col-span-2 flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {editingStaff ? 'Update Staff' : 'Add Staff'}
-                </button>
+               <button
+  type="submit"
+  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+>
+  {loading
+    ? (editingStaff ? 'Updating...' : 'Adding...')
+    : (editingStaff ? 'Update Staff' : 'Add Staff')}
+</button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -249,64 +260,50 @@ const StaffTable: React.FC = () => {
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-50">
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">SN</th>
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Role</th>
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Salary</th>
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Work Progress</th>
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Start Date</th>
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-              <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
+              <th className="border px-4 py-3">SN</th>
+              <th className="border px-4 py-3">Role</th>
+              <th className="border px-4 py-3">Name</th>
+              <th className="border px-4 py-3">Salary</th>
+              <th className="border px-4 py-3">Progress</th>
+              <th className="border px-4 py-3">Start Date</th>
+              <th className="border px-4 py-3">Status</th>
+              <th className="border px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             {projectStaff.map((staffMember, index) => (
               <tr key={staffMember.id} className="hover:bg-gray-50">
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{index + 1}</td>
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {staffMember.role}
-                  </span>
-                </td>
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{staffMember.name}</td>
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{formatCurrency(staffMember.salary)}</td>
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                <td className="border px-4 py-3">{index + 1}</td>
+                <td className="border px-4 py-3">{staffMember.role}</td>
+                <td className="border px-4 py-3">{staffMember.name}</td>
+                <td className="border px-4 py-3">{formatCurrency(staffMember.salary)}</td>
+                <td className="border px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(staffMember.workProgress)}`}
+                      <div
+                        className={`h-2 rounded-full ${getProgressColor(staffMember.workProgress)}`}
                         style={{ width: `${staffMember.workProgress}%` }}
-                      ></div>
+                      />
                     </div>
-                    <span className={`text-sm font-medium ${getProgressTextColor(staffMember.workProgress)}`}>
+                    <span className={`text-sm ${getProgressTextColor(staffMember.workProgress)}`}>
                       {staffMember.workProgress}%
                     </span>
                   </div>
                 </td>
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                  {new Date(staffMember.startDate).toLocaleDateString()}
-                </td>
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    staffMember.status === 'active' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
+                <td className="border px-4 py-3">{new Date(staffMember.startDate).toLocaleDateString()}</td>
+                <td className="border px-4 py-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    staffMember.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
                     {staffMember.status}
                   </span>
                 </td>
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                <td className="border px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEdit(staffMember)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
+                    <button onClick={() => handleEdit(staffMember)} className="text-blue-600 hover:text-blue-800">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => handleDelete(staffMember.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
+                    <button onClick={() => handleDelete(staffMember.id)} className="text-red-600 hover:text-red-800">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -318,7 +315,7 @@ const StaffTable: React.FC = () => {
         {projectStaff.length === 0 && (
           <div className="text-center py-8">
             <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No staff members found for this project. Add some staff to get started.</p>
+            <p className="text-gray-500">No staff members found for this project.</p>
           </div>
         )}
       </div>

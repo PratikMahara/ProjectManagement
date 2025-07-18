@@ -34,7 +34,7 @@ const Login: React.FC = () => {
         return;
       }
       const data = await res.json();
-      console.log([data.accessToken, data]);
+      // console.log([data.accessToken, data]);
       setAuthenticated(data.data); // data.data should be the user object
       // Optionally redirect here (e.g., to dashboard)
     } catch (error){

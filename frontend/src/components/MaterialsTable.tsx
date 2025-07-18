@@ -27,12 +27,12 @@ const MaterialsTable: React.FC = () => {
       </div>
     );
   }
-console.log("Current Project ID:", currentProject.id);
-console.log("All Materials:", materials.map(m => m.projectId));
+// console.log("Current Project ID:", currentProject.id);
+// console.log("All Materials:", materials.map(m => m.projectId));
 
 const projectMaterials = materials.filter(m => m.projectId === currentProject.id);
+console.log(projectMaterials);
 
-console.log("All Materials:", materials.map(m => m.projectId));
 
   const resetForm = () => {
     setFormData({
@@ -52,7 +52,7 @@ console.log("All Materials:", materials.map(m => m.projectId));
     const actualStock = Number(formData.actualStock) || 0;
     const usedStock = Number(formData.usedStock) || 0;
     const costPerUnit = Number(formData.costPerUnit) || 0;
-console.log(typeof actualStock, typeof usedStock, typeof costPerUnit)
+// console.log(typeof actualStock, typeof usedStock, typeof costPerUnit)
     if (editingMaterial) {
       updateMaterial(editingMaterial.id, {
         ...formData,
@@ -66,7 +66,7 @@ console.log(typeof actualStock, typeof usedStock, typeof costPerUnit)
         actualStock,
         usedStock,
         costPerUnit,
-        projectId: currentProject.id,
+         projectId: currentProject.id,
       });
     }
 
@@ -94,17 +94,18 @@ console.log(typeof actualStock, typeof usedStock, typeof costPerUnit)
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'critical':
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
-      case 'warning':
-        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
-      default:
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-    }
-  };
-
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "critical":
+      return <span style={{ color: "red" }}>⛔</span>;
+    case "warning":
+      return <span style={{ color: "orange" }}>⚠️</span>;
+    case "good":
+      return <span style={{ color: "green" }}>✅</span>;
+    default:
+      return null;
+  }
+};
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical':
@@ -278,7 +279,7 @@ console.log(typeof actualStock, typeof usedStock, typeof costPerUnit)
           <tbody>
             {projectMaterials.map((material, index) => (
               <tr key={material.id} className="hover:bg-gray-50">
-                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{index + 1}</td>
+                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{material.serialNumber}</td>
                 <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{material.materialName}</td>
                 <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{material.siteName}</td>
                 <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{material.actualStock}</td>
