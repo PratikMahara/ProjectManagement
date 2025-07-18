@@ -46,7 +46,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     const fetchProjects = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/projects/getproject"
+          "https://projectmanagement-wouh.onrender.com/api/projects/getproject"
         );
         const fetched: Project[] = res.data.data.map((p: any) => ({
           id: p._id,
@@ -84,7 +84,7 @@ useEffect(() => {
   ) => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/projects/save",
+        "https://projectmanagement-wouh.onrender.com/api/projects/save",
         projectData
       );
       const created = res.data.data;
@@ -128,7 +128,7 @@ useEffect(() => {
 
   const fetchAllMaterials = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/material/getmat");
+      const res = await axios.get("https://projectmanagement-wouh.onrender.com/api/material/getmat");
       if (!res.data || !res.data.data) {
         console.error("Invalid response structure:", res.data);
         return;
@@ -167,7 +167,7 @@ useEffect(() => {
   ) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/material/savemat",
+        "https://projectmanagement-wouh.onrender.com/api/material/savemat",
         materialData
       );
       const saved = response.data.data;
@@ -194,7 +194,7 @@ useEffect(() => {
 
   const updateMaterial = (id: string, updates: Partial<Material>) => {
   axios
-    .put(`http://localhost:5000/api/material/updatemat/${id}`, updates)
+    .put(`https://projectmanagement-wouh.onrender.com/api/material/updatemat/${id}`, updates)
     .then((response) => {
       const updatedMaterial = response.data.material;
 
@@ -220,7 +220,7 @@ useEffect(() => {
 
   const deleteMaterial = (id: string) => {
     axios
-      .delete(`http://localhost:5000/api/material/delmat/${id}`)
+      .delete(`https://projectmanagement-wouh.onrender.com/api/material/delmat/${id}`)
       .then(() => {
         console.log("Material deleted successfully");
       })
@@ -232,7 +232,7 @@ useEffect(() => {
 
 const addStaff = async (staffData: Omit<Staff, "id">) => {
   try {
-    const res = await axios.post("http://localhost:5000/api/staff/addstaff", staffData);
+    const res = await axios.post("https://projectmanagement-wouh.onrender.com/api/staff/addstaff", staffData);
     const saved = res.data.data;
 
     const newStaff: Staff = {
@@ -255,7 +255,7 @@ const addStaff = async (staffData: Omit<Staff, "id">) => {
 };
 const fetchAllStaff = async () => {
   try {
-    const res = await axios.get("http://localhost:5000/api/staff/getstaff");
+    const res = await axios.get("https://projectmanagement-wouh.onrender.com/api/staff/getstaff");
     if (!res.data || !res.data.data) {
       console.error("Invalid response structure:", res.data);
       return;
@@ -284,7 +284,7 @@ const fetchAllStaff = async () => {
  const updateStaff = async (id: string, updates: Partial<Staff>) => {
   try {
     // call backend API
-    await axios.put(`http://localhost:5000/api/staff/updatestaff/${id}`, updates);
+    await axios.put(`https://projectmanagement-wouh.onrender.com/api/staff/updatestaff/${id}`, updates);
 
     // update state
     setStaff((prev) =>
@@ -305,7 +305,7 @@ const deleteStaff = async (id: string) => {
   }
 
   try {
-    await axios.delete(`http://localhost:5000/api/staff/deletestaff/${id}`);
+    await axios.delete(`https://projectmanagement-wouh.onrender.com/api/staff/deletestaff/${id}`);
     setStaff((prev) => prev.filter((member) => member.id !== id));
   } catch (err) {
     console.error("Failed to delete staff:", err);
