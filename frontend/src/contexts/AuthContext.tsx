@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/user/me', { credentials: 'include' });
+        const res = await fetch('https://projectmanagement-wouh.onrender.com/api/user/me', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setUser(data.data); // Adjust if your backend returns differently
